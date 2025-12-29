@@ -42,7 +42,7 @@
 
         /* Sidebar */
         .sidebar {
-            width: 280px;
+            width: 300px;
             background: var(--sidebar);
             padding: 20px;
             display: flex;
@@ -63,19 +63,83 @@
             color: var(--accent);
         }
 
-        /* Connection Status */
-        .status-card {
+        /* Connect Card */
+        .connect-card {
             background: var(--card);
-            padding: 15px;
-            border-radius: 10px;
+            padding: 20px;
+            border-radius: 12px;
             margin-bottom: 20px;
         }
 
+        .connect-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .code-input-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .code-input {
+            flex: 1;
+            background: var(--input);
+            border: 2px solid var(--dim);
+            padding: 12px;
+            border-radius: 8px;
+            color: var(--accent);
+            font-size: 20px;
+            font-family: monospace;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-align: center;
+        }
+
+        .code-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .code-input::placeholder {
+            color: var(--dim);
+            font-size: 14px;
+            letter-spacing: 0;
+        }
+
+        .connect-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--green);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .connect-btn:hover {
+            transform: translateY(-2px);
+            background: #2ad066;
+        }
+
+        .connect-btn:disabled {
+            background: var(--dim);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Status */
         .status-row {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #2a2a3a;
         }
 
         .status-dot {
@@ -96,25 +160,13 @@
         }
 
         .status-text {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--dim);
-        }
-
-        .connect-code {
-            background: var(--input);
-            padding: 10px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 18px;
-            text-align: center;
-            letter-spacing: 3px;
-            color: var(--accent);
-            margin-top: 10px;
         }
 
         /* Settings */
         .settings-section {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .settings-label {
@@ -133,7 +185,6 @@
             border-radius: 8px;
             color: var(--text);
             font-size: 13px;
-            margin-bottom: 10px;
         }
 
         .input-field:focus {
@@ -158,9 +209,6 @@
             font-size: 13px;
             font-weight: bold;
             margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .explorer-item {
@@ -168,9 +216,6 @@
             border-radius: 5px;
             font-size: 12px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
             margin-bottom: 2px;
         }
 
@@ -201,7 +246,6 @@
             padding: 20px;
         }
 
-        /* Header */
         .header {
             background: var(--card);
             padding: 15px 20px;
@@ -236,11 +280,6 @@
             transform: translateY(-2px);
         }
 
-        .btn-primary {
-            background: var(--accent);
-            color: white;
-        }
-
         .btn-secondary {
             background: var(--input);
             color: var(--text);
@@ -256,7 +295,7 @@
             color: black;
         }
 
-        /* Chat Area */
+        /* Chat */
         .chat-container {
             flex: 1;
             overflow-y: auto;
@@ -444,7 +483,6 @@
 
         .send-btn:hover {
             background: #4752c4;
-            transform: scale(1.05);
         }
 
         .send-btn:disabled {
@@ -476,18 +514,9 @@
         }
 
         /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 3px;
-        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
 
         /* Toast */
         .toast {
@@ -503,9 +532,7 @@
             z-index: 1000;
         }
 
-        .toast.error {
-            background: var(--red);
-        }
+        .toast.error { background: var(--red); }
 
         @keyframes slideIn {
             from { transform: translateX(100%); }
@@ -519,13 +546,18 @@
         <div class="sidebar">
             <div class="logo">🧠 <span>RoadBloxIntel</span></div>
 
-            <!-- Connection Status -->
-            <div class="status-card">
+            <!-- Connect Card -->
+            <div class="connect-card">
+                <div class="connect-title">🔌 Connect to Plugin</div>
+                <div class="code-input-wrapper">
+                    <input type="text" class="code-input" id="codeInput" placeholder="CODE" maxlength="6">
+                </div>
+                <button class="connect-btn" id="connectBtn" onclick="connectToPlugin()">Connect</button>
+                
                 <div class="status-row">
                     <div class="status-dot" id="statusDot"></div>
-                    <span class="status-text" id="statusText">Waiting for plugin...</span>
+                    <span class="status-text" id="statusText">Not connected</span>
                 </div>
-                <div class="connect-code" id="connectCode">------</div>
             </div>
 
             <!-- API Key -->
@@ -543,54 +575,45 @@
                     <option value="gpt-4o">GPT-4o</option>
                     <option value="gpt-4o-mini">GPT-4o Mini</option>
                     <option value="claude-3.5-sonnet">Claude 3.5 Sonnet</option>
-                    <option value="claude-3.5-haiku">Claude 3.5 Haiku</option>
                     <option value="deepseek-r1">DeepSeek R1</option>
-                    <option value="deepseek-v3">DeepSeek V3</option>
                 </select>
             </div>
 
             <!-- Game Explorer -->
             <div class="explorer" id="explorer">
                 <div class="explorer-title">📁 Game Explorer</div>
-                <div class="explorer-empty">Connect plugin to see game structure</div>
+                <div class="explorer-empty">Connect to see game</div>
             </div>
 
-            <!-- Actions -->
             <button class="btn btn-warning" onclick="clearChat()" style="width: 100%;">🗑️ Clear Chat</button>
         </div>
 
         <!-- Main Area -->
         <div class="main">
-            <!-- Header -->
             <div class="header">
                 <div class="header-title">💬 Chat with AI</div>
                 <div class="header-actions">
                     <button class="btn btn-secondary" onclick="scanGame()">🔍 Scan Game</button>
-                    <button class="btn btn-success" onclick="testConnection()">🔌 Test Connection</button>
                 </div>
             </div>
 
-            <!-- Chat -->
             <div class="chat-container" id="chatContainer">
                 <div class="message ai">
                     <div class="message-bubble">
                         <div class="message-header">🤖 RoadBloxIntel</div>
                         <div class="message-content">
-                            <strong>Welcome to RoadBloxIntel!</strong><br><br>
-                            I can <strong>read, edit, create, and delete</strong> anything in your Roblox game.<br><br>
-                            <strong>To get started:</strong><br>
-                            1. Install the plugin in Roblox Studio<br>
-                            2. Click "Connect" in the plugin<br>
-                            3. Copy the URL and paste it here<br>
+                            <strong>Welcome!</strong><br><br>
+                            1. Open the plugin in Roblox Studio<br>
+                            2. Enter the 6-character code shown in the plugin<br>
+                            3. Click Connect<br>
                             4. Enter your API key<br>
                             5. Start chatting!<br><br>
-                            <em>Try: "Create a part with fire particles" or "Show me all scripts"</em>
+                            <em>I can create, edit, and delete anything in your game!</em>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Input -->
             <div class="input-area">
                 <textarea class="chat-input" id="chatInput" placeholder="Ask me to create, edit, or delete anything..." rows="1"></textarea>
                 <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
@@ -599,438 +622,256 @@
     </div>
 
     <script>
-        // ═══════════════════════════════════════════════════════════════════
-        // CONFIG
-        // ═══════════════════════════════════════════════════════════════════
-        
         const API_URL = 'https://roadbloxintel-api.adamalexander1230.workers.dev/api/chat';
         const COMMAND_URL = 'https://roadbloxintel-api.adamalexander1230.workers.dev';
 
-        // Get session from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const SESSION_ID = urlParams.get('session') || 'default-' + Math.random().toString(36).substring(7);
+        let SESSION_ID = '';
+        let state = { connected: false, gameData: null, messages: [], isGenerating: false };
+        let pollInterval = null;
 
-        // ═══════════════════════════════════════════════════════════════════
-        // STATE
-        // ═══════════════════════════════════════════════════════════════════
-        
-        let state = {
-            connected: false,
-            gameData: null,
-            messages: [],
-            isGenerating: false
-        };
-
-        // ═══════════════════════════════════════════════════════════════════
-        // INIT
-        // ═══════════════════════════════════════════════════════════════════
-
-        // Update connection code display
-        document.getElementById('connectCode').textContent = SESSION_ID.substring(0, 8).toUpperCase();
-
-        // Load saved settings
+        // Load saved
         const savedKey = localStorage.getItem('rbi_apiKey');
         if (savedKey) document.getElementById('apiKey').value = savedKey;
-
         document.getElementById('apiKey').addEventListener('change', function() {
             localStorage.setItem('rbi_apiKey', this.value);
         });
 
         const savedModel = localStorage.getItem('rbi_model');
         if (savedModel) document.getElementById('modelSelect').value = savedModel;
-
         document.getElementById('modelSelect').addEventListener('change', function() {
             localStorage.setItem('rbi_model', this.value);
         });
 
-        // ═══════════════════════════════════════════════════════════════════
-        // UTILS
-        // ═══════════════════════════════════════════════════════════════════
-
-        function showToast(message, isError = false) {
-            const toast = document.createElement('div');
-            toast.className = 'toast' + (isError ? ' error' : '');
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+        function showToast(msg, isError) {
+            const t = document.createElement('div');
+            t.className = 'toast' + (isError ? ' error' : '');
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
         }
 
         function scrollToBottom() {
-            const container = document.getElementById('chatContainer');
-            container.scrollTop = container.scrollHeight;
+            const c = document.getElementById('chatContainer');
+            c.scrollTop = c.scrollHeight;
         }
 
-        function formatContent(content) {
-            return content
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/`(.*?)`/g, '<code>$1</code>')
-                .replace(/\n/g, '<br>');
+        function formatContent(c) {
+            return c.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`(.*?)`/g, '<code>$1</code>')
+                    .replace(/\n/g, '<br>');
         }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
         }
 
-        // ═══════════════════════════════════════════════════════════════════
-        // CONNECTION STATUS POLLING
-        // ═══════════════════════════════════════════════════════════════════
+        // Connect
+        function connectToPlugin() {
+            const code = document.getElementById('codeInput').value.toUpperCase().trim();
+            if (code.length !== 6) {
+                showToast('Enter 6-character code from plugin', true);
+                return;
+            }
+            SESSION_ID = code;
+            document.getElementById('connectBtn').disabled = true;
+            document.getElementById('connectBtn').textContent = 'Connecting...';
+            
+            startPolling();
+            showToast('Connecting to plugin...');
+        }
 
-        function updateConnectionStatus(connected) {
+        function updateStatus(connected) {
             state.connected = connected;
             document.getElementById('statusDot').className = 'status-dot' + (connected ? ' connected' : '');
-            document.getElementById('statusText').textContent = connected ? 'Plugin connected!' : 'Waiting for plugin...';
+            document.getElementById('statusText').textContent = connected ? 'Connected!' : 'Not connected';
+            document.getElementById('connectBtn').textContent = connected ? 'Connected ✓' : 'Connect';
         }
 
-        // Poll for status from plugin
-        setInterval(async () => {
-            try {
-                const response = await fetch(`${COMMAND_URL}/status?session=${SESSION_ID}`);
-                const data = await response.json();
-                
-                if (data.gameData) {
-                    state.gameData = data.gameData;
-                    updateExplorer();
-                    updateConnectionStatus(true);
-                }
-                
-                if (data.results && data.results.length > 0) {
-                    for (const result of data.results) {
-                        addSystemMessage(`✅ ${result.message}`);
+        function startPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+            
+            pollInterval = setInterval(async () => {
+                try {
+                    const r = await fetch(`${COMMAND_URL}/status?session=${SESSION_ID}`);
+                    const d = await r.json();
+                    
+                    if (d.gameData) {
+                        state.gameData = d.gameData;
+                        updateExplorer();
+                        updateStatus(true);
                     }
-                }
-            } catch (e) {
-                // Silent fail
-            }
-        }, 2000);
-
-        // ═══════════════════════════════════════════════════════════════════
-        // COMMANDS TO PLUGIN
-        // ═══════════════════════════════════════════════════════════════════
+                    
+                    if (d.results && d.results.length > 0) {
+                        for (const res of d.results) {
+                            addSystemMessage('✅ ' + res.message);
+                        }
+                    }
+                } catch (e) {}
+            }, 2000);
+        }
 
         async function sendCommand(cmd) {
             try {
-                const response = await fetch(`${COMMAND_URL}/command`, {
+                await fetch(`${COMMAND_URL}/command`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ session: SESSION_ID, command: cmd })
                 });
-                const data = await response.json();
-                if (data.success) {
-                    showToast('Command sent to plugin!');
-                }
-                return data;
+                showToast('Command sent!');
             } catch (e) {
-                showToast('Failed to send command', true);
-                return { success: false };
+                showToast('Failed to send', true);
             }
         }
 
         async function scanGame() {
-            await sendCommand({ action: 'scan_game' });
-            showToast('Scan command sent!');
-        }
-
-        async function testConnection() {
-            await sendCommand({ action: 'ping' });
-        }
-
-        // ═══════════════════════════════════════════════════════════════════
-        // EXPLORER
-        // ═══════════════════════════════════════════════════════════════════
-
-        function updateExplorer() {
-            const explorer = document.getElementById('explorer');
-            
-            if (!state.gameData || !state.gameData.scripts) {
-                explorer.innerHTML = `
-                    <div class="explorer-title">📁 Game Explorer</div>
-                    <div class="explorer-empty">Connect plugin to see game structure</div>
-                `;
+            if (!SESSION_ID) {
+                showToast('Connect first!', true);
                 return;
             }
-
-            let html = `<div class="explorer-title">📁 Game Explorer (${state.gameData.scripts.length} scripts)</div>`;
-            
-            for (const script of state.gameData.scripts.slice(0, 30)) {
-                html += `
-                    <div class="explorer-item script" onclick="selectScript('${script.path}')">
-                        ⚡ ${script.name}
-                    </div>
-                `;
-            }
-
-            if (state.gameData.parts) {
-                html += `<div class="explorer-item part">📦 ${state.gameData.parts} parts</div>`;
-            }
-            
-            if (state.gameData.models) {
-                html += `<div class="explorer-item part">🏗️ ${state.gameData.models} models</div>`;
-            }
-
-            explorer.innerHTML = html;
+            await sendCommand({ action: 'scan_game' });
         }
 
-        function selectScript(path) {
-            document.getElementById('chatInput').value = `Show me the code for ${path}`;
+        function updateExplorer() {
+            const e = document.getElementById('explorer');
+            if (!state.gameData || !state.gameData.scripts) {
+                e.innerHTML = '<div class="explorer-title">📁 Game Explorer</div><div class="explorer-empty">Connect to see game</div>';
+                return;
+            }
+            let h = `<div class="explorer-title">📁 ${state.gameData.scripts.length} scripts</div>`;
+            for (const s of state.gameData.scripts.slice(0, 25)) {
+                h += `<div class="explorer-item script" onclick="selectScript('${s.path}')">⚡ ${s.name}</div>`;
+            }
+            if (state.gameData.parts) h += `<div class="explorer-item part">📦 ${state.gameData.parts} parts</div>`;
+            e.innerHTML = h;
+        }
+
+        function selectScript(p) {
+            document.getElementById('chatInput').value = 'Show me the code for ' + p;
             document.getElementById('chatInput').focus();
         }
 
-        // ═══════════════════════════════════════════════════════════════════
-        // CHAT UI
-        // ═══════════════════════════════════════════════════════════════════
-
-        function addMessage(content, isUser = false) {
-            const container = document.getElementById('chatContainer');
-            
-            const div = document.createElement('div');
-            div.className = `message ${isUser ? 'user' : 'ai'}`;
-            
-            div.innerHTML = `
-                <div class="message-bubble">
-                    <div class="message-header">${isUser ? '👤 You' : '🤖 RoadBloxIntel'}</div>
-                    <div class="message-content">${formatContent(content)}</div>
-                </div>
-            `;
-            
-            container.appendChild(div);
+        function addMessage(content, isUser) {
+            const c = document.getElementById('chatContainer');
+            const d = document.createElement('div');
+            d.className = 'message ' + (isUser ? 'user' : 'ai');
+            d.innerHTML = `<div class="message-bubble"><div class="message-header">${isUser ? '👤 You' : '🤖 RoadBloxIntel'}</div><div class="message-content">${formatContent(content)}</div></div>`;
+            c.appendChild(d);
             scrollToBottom();
         }
 
         function addSystemMessage(content) {
-            const container = document.getElementById('chatContainer');
-            
-            const div = document.createElement('div');
-            div.className = 'message system';
-            
-            div.innerHTML = `
-                <div class="message-bubble">
-                    <div class="message-header">⚡ System</div>
-                    <div class="message-content">${formatContent(content)}</div>
-                </div>
-            `;
-            
-            container.appendChild(div);
+            const c = document.getElementById('chatContainer');
+            const d = document.createElement('div');
+            d.className = 'message system';
+            d.innerHTML = `<div class="message-bubble"><div class="message-header">⚡ System</div><div class="message-content">${formatContent(content)}</div></div>`;
+            c.appendChild(d);
             scrollToBottom();
         }
 
-        function addCodeBlock(code, language = 'lua') {
-            const container = document.getElementById('chatContainer');
-            
-            const div = document.createElement('div');
-            div.className = 'message ai';
-            
-            const codeId = 'code-' + Math.random().toString(36).substring(7);
-            
-            div.innerHTML = `
-                <div class="code-block">
-                    <div class="code-header">
-                        <span class="code-lang">📜 ${language.toUpperCase()}</span>
-                        <div class="code-actions">
-                            <button class="code-btn copy" onclick="copyCode('${codeId}')">📋 Copy</button>
-                            <button class="code-btn execute" onclick="executeCode('${codeId}')">▶️ Execute</button>
-                        </div>
-                    </div>
-                    <div class="code-content">
-                        <pre id="${codeId}">${escapeHtml(code)}</pre>
-                    </div>
-                </div>
-            `;
-            
-            container.appendChild(div);
+        function addCodeBlock(code) {
+            const c = document.getElementById('chatContainer');
+            const id = 'code-' + Math.random().toString(36).substr(2, 9);
+            const d = document.createElement('div');
+            d.className = 'message ai';
+            d.innerHTML = `<div class="code-block"><div class="code-header"><span class="code-lang">📜 LUA</span><div class="code-actions"><button class="code-btn copy" onclick="navigator.clipboard.writeText(document.getElementById('${id}').textContent);showToast('Copied!')">📋 Copy</button><button class="code-btn execute" onclick="executeCode('${id}')">▶️ Execute</button></div></div><div class="code-content"><pre id="${id}">${escapeHtml(code)}</pre></div></div>`;
+            c.appendChild(d);
             scrollToBottom();
         }
 
-        function addCommandBlock(command) {
-            const container = document.getElementById('chatContainer');
-            
-            const cmdId = 'cmd-' + Math.random().toString(36).substring(7);
-            
-            const div = document.createElement('div');
-            div.className = 'message ai';
-            
-            div.innerHTML = `
-                <div class="command-block">
-                    <div class="command-title">⚡ Command: ${command.action}</div>
-                    <div class="command-action" id="${cmdId}">${JSON.stringify(command, null, 2)}</div>
-                    <button class="btn btn-success" style="margin-top: 10px;" onclick="executeCommandById('${cmdId}')">▶️ Execute</button>
-                </div>
-            `;
-            
-            container.appendChild(div);
+        function addCommandBlock(cmd) {
+            const c = document.getElementById('chatContainer');
+            const id = 'cmd-' + Math.random().toString(36).substr(2, 9);
+            const d = document.createElement('div');
+            d.className = 'message ai';
+            d.innerHTML = `<div class="command-block"><div class="command-title">⚡ ${cmd.action}</div><pre class="command-action" id="${id}">${JSON.stringify(cmd, null, 2)}</pre><button class="btn btn-success" style="margin-top:10px" onclick="executeCommandById('${id}')">▶️ Execute</button></div>`;
+            c.appendChild(d);
             scrollToBottom();
         }
 
-        function copyCode(codeId) {
-            const code = document.getElementById(codeId).textContent;
-            navigator.clipboard.writeText(code);
-            showToast('Code copied!');
+        async function executeCode(id) {
+            const code = document.getElementById(id).textContent;
+            await sendCommand({ action: 'create_script', name: 'AI_Script_' + Date.now(), code: code, scriptType: 'Script', parent: 'ServerScriptService' });
         }
 
-        async function executeCode(codeId) {
-            const code = document.getElementById(codeId).textContent;
-            await sendCommand({
-                action: 'create_script',
-                name: 'AI_Script_' + Date.now(),
-                code: code,
-                scriptType: 'Script',
-                parent: 'ServerScriptService'
-            });
-        }
-
-        async function executeCommandById(cmdId) {
-            const cmdText = document.getElementById(cmdId).textContent;
+        async function executeCommandById(id) {
             try {
-                const cmd = JSON.parse(cmdText);
+                const cmd = JSON.parse(document.getElementById(id).textContent);
                 await sendCommand(cmd);
-            } catch (e) {
-                showToast('Invalid command', true);
-            }
+            } catch (e) { showToast('Invalid command', true); }
         }
 
         function showLoading() {
-            const container = document.getElementById('chatContainer');
-            const div = document.createElement('div');
-            div.id = 'loadingMessage';
-            div.className = 'message ai';
-            div.innerHTML = `
-                <div class="message-bubble">
-                    <div class="loading">
-                        <div class="loading-dot"></div>
-                        <div class="loading-dot"></div>
-                        <div class="loading-dot"></div>
-                    </div>
-                </div>
-            `;
-            container.appendChild(div);
+            const c = document.getElementById('chatContainer');
+            const d = document.createElement('div');
+            d.id = 'loadingMsg';
+            d.className = 'message ai';
+            d.innerHTML = '<div class="message-bubble"><div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div></div>';
+            c.appendChild(d);
             scrollToBottom();
         }
 
         function hideLoading() {
-            const el = document.getElementById('loadingMessage');
-            if (el) el.remove();
+            const l = document.getElementById('loadingMsg');
+            if (l) l.remove();
         }
 
         function clearChat() {
             document.getElementById('chatContainer').innerHTML = '';
             state.messages = [];
-            addMessage('Chat cleared. How can I help?');
+            addMessage('Chat cleared!', false);
         }
 
-        // ═══════════════════════════════════════════════════════════════════
-        // AI CHAT
-        // ═══════════════════════════════════════════════════════════════════
-
         function buildSystemPrompt() {
-            let prompt = `You are RoadBloxIntel, an AI that can READ, EDIT, CREATE, and DELETE anything in a Roblox game.
+            let p = `You are RoadBloxIntel, an AI for Roblox development. You can create, edit, delete scripts and objects.
 
-CAPABILITIES:
-- Read all scripts in the game
-- Edit existing scripts
-- Create new scripts (Script, LocalScript, ModuleScript)
-- Delete scripts or objects
-- Create parts with effects (particles, lights)
-- Add ParticleEmitters, Beams, Trails
+COMMANDS (use \`\`\`json blocks):
+- {"action":"create_script","name":"Name","scriptType":"Script","parent":"ServerScriptService","code":"..."}
+- {"action":"edit_script","path":"ServerScriptService.Name","code":"..."}
+- {"action":"delete","path":"ServerScriptService.Name"}
+- {"action":"create_part","name":"Part","sizeX":4,"sizeY":4,"sizeZ":4,"posX":0,"posY":10,"posZ":0,"color":{"r":255,"g":0,"b":0},"particles":{"rate":50}}
 
-COMMANDS (use JSON in \`\`\`json blocks):
-1. Create script:
-\`\`\`json
-{"action":"create_script","name":"MyScript","scriptType":"Script","parent":"ServerScriptService","code":"print('Hello')"}
-\`\`\`
-
-2. Edit script:
-\`\`\`json
-{"action":"edit_script","path":"ServerScriptService.MyScript","code":"print('Updated')"}
-\`\`\`
-
-3. Delete:
-\`\`\`json
-{"action":"delete","path":"ServerScriptService.MyScript"}
-\`\`\`
-
-4. Create part with effects:
-\`\`\`json
-{"action":"create_part","name":"CoolPart","sizeX":4,"sizeY":4,"sizeZ":4,"posX":0,"posY":10,"posZ":0,"color":{"r":255,"g":0,"b":0},"particles":{"rate":50,"lifetime":2},"light":{"brightness":2,"range":15}}
-\`\`\`
-
-5. Add particle to existing object:
-\`\`\`json
-{"action":"add_particle","path":"Workspace.Part","rate":100,"lifetime":3,"speed":10}
-\`\`\`
-
-RULES:
-- Always explain what you're doing briefly
-- Put Lua code in \`\`\`lua blocks
-- Put commands in \`\`\`json blocks
-- Be concise and helpful
-`;
-
+Put Lua code in \`\`\`lua blocks. Be concise.`;
+            
             if (state.gameData) {
-                prompt += `\n\nCURRENT GAME DATA:\n`;
-                prompt += `Scripts: ${state.gameData.scripts?.length || 0}\n`;
-                prompt += `Parts: ${state.gameData.parts || 0}\n`;
-                prompt += `Models: ${state.gameData.models || 0}\n`;
-                
-                if (state.gameData.scripts && state.gameData.scripts.length > 0) {
-                    prompt += `\nSCRIPTS IN GAME:\n`;
+                p += `\n\nGAME: ${state.gameData.scripts?.length || 0} scripts, ${state.gameData.parts || 0} parts`;
+                if (state.gameData.scripts) {
+                    p += '\n\nSCRIPTS:\n';
                     for (const s of state.gameData.scripts.slice(0, 15)) {
-                        prompt += `- ${s.path} (${s.lines} lines)\n`;
+                        p += `- ${s.path}\n`;
                     }
                 }
             }
-
-            return prompt;
+            return p;
         }
 
-        function processAIResponse(content) {
-            // Extract code blocks
-            const luaBlocks = content.match(/```lua\n?([\s\S]*?)```/g) || [];
-            const jsonBlocks = content.match(/```json\n?([\s\S]*?)```/g) || [];
-
-            // Clean text (remove code blocks)
-            let cleanText = content
-                .replace(/```lua\n?[\s\S]*?```/g, '')
-                .replace(/```json\n?[\s\S]*?```/g, '')
-                .trim();
-
-            // Show text response
-            if (cleanText) {
-                addMessage(cleanText);
+        function processResponse(content) {
+            const lua = content.match(/```lua\n?([\s\S]*?)```/g) || [];
+            const json = content.match(/```json\n?([\s\S]*?)```/g) || [];
+            let text = content.replace(/```lua\n?[\s\S]*?```/g, '').replace(/```json\n?[\s\S]*?```/g, '').trim();
+            
+            if (text) addMessage(text, false);
+            for (const b of lua) {
+                const code = b.replace(/```lua\n?/, '').replace(/```$/, '').trim();
+                if (code.length > 5) addCodeBlock(code);
             }
-
-            // Show code blocks
-            for (const block of luaBlocks) {
-                const code = block.replace(/```lua\n?/, '').replace(/```$/, '').trim();
-                if (code.length > 5) {
-                    addCodeBlock(code, 'lua');
-                }
-            }
-
-            // Show command blocks
-            for (const block of jsonBlocks) {
+            for (const b of json) {
                 try {
-                    const json = block.replace(/```json\n?/, '').replace(/```$/, '').trim();
-                    const cmd = JSON.parse(json);
+                    const cmd = JSON.parse(b.replace(/```json\n?/, '').replace(/```$/, '').trim());
                     addCommandBlock(cmd);
-                } catch (e) {
-                    // Invalid JSON, ignore
-                }
+                } catch (e) {}
             }
         }
 
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const msg = input.value.trim();
-            
             if (!msg || state.isGenerating) return;
-            
-            const apiKey = document.getElementById('apiKey').value;
-            if (!apiKey) {
-                showToast('Please enter your API key!', true);
-                return;
-            }
+
+            const key = document.getElementById('apiKey').value;
+            if (!key) { showToast('Enter API key!', true); return; }
 
             input.value = '';
             state.isGenerating = true;
@@ -1038,69 +879,44 @@ RULES:
 
             addMessage(msg, true);
             state.messages.push({ role: 'user', content: msg });
-
             showLoading();
 
             try {
-                const systemPrompt = buildSystemPrompt();
-                
-                const messages = [
-                    { role: 'system', content: systemPrompt },
-                    ...state.messages.slice(-20)
-                ];
-
-                const model = document.getElementById('modelSelect').value;
-
-                const response = await fetch(API_URL, {
+                const r = await fetch(API_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
                     body: JSON.stringify({
-                        model: model,
-                        messages: messages,
+                        model: document.getElementById('modelSelect').value,
+                        messages: [{ role: 'system', content: buildSystemPrompt() }, ...state.messages.slice(-20)],
                         temperature: 0.7,
                         max_tokens: 8192
                     })
                 });
-
-                const data = await response.json();
-                
+                const d = await r.json();
                 hideLoading();
 
-                if (data.error) {
-                    addMessage(`❌ Error: ${data.error.message || JSON.stringify(data.error)}`);
-                    return;
-                }
-
-                const content = data.choices?.[0]?.message?.content || 'No response';
+                if (d.error) { addMessage('❌ ' + (d.error.message || JSON.stringify(d.error)), false); return; }
                 
-                processAIResponse(content);
-                
+                const content = d.choices?.[0]?.message?.content || 'No response';
+                processResponse(content);
                 state.messages.push({ role: 'assistant', content: content });
-
-            } catch (error) {
+            } catch (e) {
                 hideLoading();
-                addMessage(`❌ Error: ${error.message}`);
+                addMessage('❌ ' + e.message, false);
             } finally {
                 state.isGenerating = false;
                 document.getElementById('sendBtn').disabled = false;
             }
         }
 
-        // ═══════════════════════════════════════════════════════════════════
-        // INPUT HANDLING
-        // ═══════════════════════════════════════════════════════════════════
-
         document.getElementById('chatInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
         });
 
-        // Auto-resize textarea
+        document.getElementById('codeInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { connectToPlugin(); }
+        });
+
         document.getElementById('chatInput').addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 150) + 'px';
