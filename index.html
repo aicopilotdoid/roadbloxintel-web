@@ -35,7 +35,6 @@
             overflow: hidden;
         }
 
-        /* Layout */
         .container {
             display: flex;
             height: 100vh;
@@ -290,6 +289,11 @@
             background: var(--ai);
         }
 
+        .message.system .message-bubble {
+            background: var(--card);
+            border: 1px solid var(--green);
+        }
+
         .message-header {
             font-size: 11px;
             font-weight: bold;
@@ -299,6 +303,10 @@
 
         .message.user .message-header {
             color: #a5b4fc;
+        }
+
+        .message.system .message-header {
+            color: var(--green);
         }
 
         .message-content {
@@ -370,6 +378,7 @@
             font-family: 'Fira Code', monospace;
             font-size: 13px;
             color: #98c379;
+            white-space: pre-wrap;
         }
 
         /* Command Block */
@@ -389,8 +398,10 @@
         }
 
         .command-action {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text);
+            font-family: monospace;
+            white-space: pre-wrap;
         }
 
         /* Input Area */
@@ -488,7 +499,7 @@
             padding: 15px 25px;
             border-radius: 10px;
             font-weight: bold;
-            animation: slideIn 0.3s, fadeOut 0.3s 2.7s;
+            animation: slideIn 0.3s;
             z-index: 1000;
         }
 
@@ -499,10 +510,6 @@
         @keyframes slideIn {
             from { transform: translateX(100%); }
             to { transform: translateX(0); }
-        }
-
-        @keyframes fadeOut {
-            to { opacity: 0; }
         }
     </style>
 </head>
@@ -573,9 +580,10 @@
                             I can <strong>read, edit, create, and delete</strong> anything in your Roblox game.<br><br>
                             <strong>To get started:</strong><br>
                             1. Install the plugin in Roblox Studio<br>
-                            2. Enter your API key<br>
-                            3. The plugin will connect automatically<br>
-                            4. Start chatting!<br><br>
+                            2. Click "Connect" in the plugin<br>
+                            3. Copy the URL and paste it here<br>
+                            4. Enter your API key<br>
+                            5. Start chatting!<br><br>
                             <em>Try: "Create a part with fire particles" or "Show me all scripts"</em>
                         </div>
                     </div>
@@ -592,27 +600,52 @@
 
     <script>
         // ═══════════════════════════════════════════════════════════════════
-        // STATE
+        // CONFIG
         // ═══════════════════════════════════════════════════════════════════
         
         const API_URL = 'https://roadbloxintel-api.adamalexander1230.workers.dev/api/chat';
+        const COMMAND_URL = 'https://roadbloxintel-api.adamalexander1230.workers.dev';
+
+        // Get session from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const SESSION_ID = urlParams.get('session') || 'default-' + Math.random().toString(36).substring(7);
+
+        // ═══════════════════════════════════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════════════════════════════════
         
         let state = {
             connected: false,
-            connectionCode: generateCode(),
             gameData: null,
             messages: [],
-            pendingCommands: [],
             isGenerating: false
         };
 
         // ═══════════════════════════════════════════════════════════════════
-        // UTILS
+        // INIT
         // ═══════════════════════════════════════════════════════════════════
 
-        function generateCode() {
-            return Math.random().toString(36).substring(2, 8).toUpperCase();
-        }
+        // Update connection code display
+        document.getElementById('connectCode').textContent = SESSION_ID.substring(0, 8).toUpperCase();
+
+        // Load saved settings
+        const savedKey = localStorage.getItem('rbi_apiKey');
+        if (savedKey) document.getElementById('apiKey').value = savedKey;
+
+        document.getElementById('apiKey').addEventListener('change', function() {
+            localStorage.setItem('rbi_apiKey', this.value);
+        });
+
+        const savedModel = localStorage.getItem('rbi_model');
+        if (savedModel) document.getElementById('modelSelect').value = savedModel;
+
+        document.getElementById('modelSelect').addEventListener('change', function() {
+            localStorage.setItem('rbi_model', this.value);
+        });
+
+        // ═══════════════════════════════════════════════════════════════════
+        // UTILS
+        // ═══════════════════════════════════════════════════════════════════
 
         function showToast(message, isError = false) {
             const toast = document.createElement('div');
@@ -627,8 +660,22 @@
             container.scrollTop = container.scrollHeight;
         }
 
+        function formatContent(content) {
+            return content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code>$1</code>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         // ═══════════════════════════════════════════════════════════════════
-        // CONNECTION (Plugin will poll this)
+        // CONNECTION STATUS POLLING
         // ═══════════════════════════════════════════════════════════════════
 
         function updateConnectionStatus(connected) {
@@ -637,27 +684,58 @@
             document.getElementById('statusText').textContent = connected ? 'Plugin connected!' : 'Waiting for plugin...';
         }
 
-        document.getElementById('connectCode').textContent = state.connectionCode;
+        // Poll for status from plugin
+        setInterval(async () => {
+            try {
+                const response = await fetch(`${COMMAND_URL}/status?session=${SESSION_ID}`);
+                const data = await response.json();
+                
+                if (data.gameData) {
+                    state.gameData = data.gameData;
+                    updateExplorer();
+                    updateConnectionStatus(true);
+                }
+                
+                if (data.results && data.results.length > 0) {
+                    for (const result of data.results) {
+                        addSystemMessage(`✅ ${result.message}`);
+                    }
+                }
+            } catch (e) {
+                // Silent fail
+            }
+        }, 2000);
 
-        // Store commands for plugin to fetch
-        window.getCommands = function() {
-            const cmds = [...state.pendingCommands];
-            state.pendingCommands = [];
-            return cmds;
-        };
+        // ═══════════════════════════════════════════════════════════════════
+        // COMMANDS TO PLUGIN
+        // ═══════════════════════════════════════════════════════════════════
 
-        // Plugin sends game data here
-        window.receiveGameData = function(data) {
-            state.gameData = data;
-            updateConnectionStatus(true);
-            updateExplorer();
-            showToast('Game data received!');
-        };
+        async function sendCommand(cmd) {
+            try {
+                const response = await fetch(`${COMMAND_URL}/command`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session: SESSION_ID, command: cmd })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Command sent to plugin!');
+                }
+                return data;
+            } catch (e) {
+                showToast('Failed to send command', true);
+                return { success: false };
+            }
+        }
 
-        // Plugin confirms command execution
-        window.commandResult = function(result) {
-            addMessage(`✅ ${result.message}`, false, true);
-        };
+        async function scanGame() {
+            await sendCommand({ action: 'scan_game' });
+            showToast('Scan command sent!');
+        }
+
+        async function testConnection() {
+            await sendCommand({ action: 'ping' });
+        }
 
         // ═══════════════════════════════════════════════════════════════════
         // EXPLORER
@@ -687,6 +765,10 @@
             if (state.gameData.parts) {
                 html += `<div class="explorer-item part">📦 ${state.gameData.parts} parts</div>`;
             }
+            
+            if (state.gameData.models) {
+                html += `<div class="explorer-item part">🏗️ ${state.gameData.models} models</div>`;
+            }
 
             explorer.innerHTML = html;
         }
@@ -696,21 +778,11 @@
             document.getElementById('chatInput').focus();
         }
 
-        function scanGame() {
-            state.pendingCommands.push({ action: 'scan_game' });
-            showToast('Scan command sent to plugin');
-        }
-
-        function testConnection() {
-            state.pendingCommands.push({ action: 'ping' });
-            showToast('Testing connection...');
-        }
-
         // ═══════════════════════════════════════════════════════════════════
-        // CHAT
+        // CHAT UI
         // ═══════════════════════════════════════════════════════════════════
 
-        function addMessage(content, isUser = false, isSystem = false) {
+        function addMessage(content, isUser = false) {
             const container = document.getElementById('chatContainer');
             
             const div = document.createElement('div');
@@ -727,23 +799,42 @@
             scrollToBottom();
         }
 
+        function addSystemMessage(content) {
+            const container = document.getElementById('chatContainer');
+            
+            const div = document.createElement('div');
+            div.className = 'message system';
+            
+            div.innerHTML = `
+                <div class="message-bubble">
+                    <div class="message-header">⚡ System</div>
+                    <div class="message-content">${formatContent(content)}</div>
+                </div>
+            `;
+            
+            container.appendChild(div);
+            scrollToBottom();
+        }
+
         function addCodeBlock(code, language = 'lua') {
             const container = document.getElementById('chatContainer');
             
             const div = document.createElement('div');
             div.className = 'message ai';
             
+            const codeId = 'code-' + Math.random().toString(36).substring(7);
+            
             div.innerHTML = `
                 <div class="code-block">
                     <div class="code-header">
                         <span class="code-lang">📜 ${language.toUpperCase()}</span>
                         <div class="code-actions">
-                            <button class="code-btn copy" onclick="copyCode(this)">📋 Copy</button>
-                            <button class="code-btn execute" onclick="executeCode(this)">▶️ Execute</button>
+                            <button class="code-btn copy" onclick="copyCode('${codeId}')">📋 Copy</button>
+                            <button class="code-btn execute" onclick="executeCode('${codeId}')">▶️ Execute</button>
                         </div>
                     </div>
                     <div class="code-content">
-                        <pre>${escapeHtml(code)}</pre>
+                        <pre id="${codeId}">${escapeHtml(code)}</pre>
                     </div>
                 </div>
             `;
@@ -755,19 +846,48 @@
         function addCommandBlock(command) {
             const container = document.getElementById('chatContainer');
             
+            const cmdId = 'cmd-' + Math.random().toString(36).substring(7);
+            
             const div = document.createElement('div');
             div.className = 'message ai';
             
             div.innerHTML = `
                 <div class="command-block">
                     <div class="command-title">⚡ Command: ${command.action}</div>
-                    <div class="command-action">${JSON.stringify(command, null, 2)}</div>
-                    <button class="btn btn-success" style="margin-top: 10px;" onclick='executeCommand(${JSON.stringify(command)})'>▶️ Execute</button>
+                    <div class="command-action" id="${cmdId}">${JSON.stringify(command, null, 2)}</div>
+                    <button class="btn btn-success" style="margin-top: 10px;" onclick="executeCommandById('${cmdId}')">▶️ Execute</button>
                 </div>
             `;
             
             container.appendChild(div);
             scrollToBottom();
+        }
+
+        function copyCode(codeId) {
+            const code = document.getElementById(codeId).textContent;
+            navigator.clipboard.writeText(code);
+            showToast('Code copied!');
+        }
+
+        async function executeCode(codeId) {
+            const code = document.getElementById(codeId).textContent;
+            await sendCommand({
+                action: 'create_script',
+                name: 'AI_Script_' + Date.now(),
+                code: code,
+                scriptType: 'Script',
+                parent: 'ServerScriptService'
+            });
+        }
+
+        async function executeCommandById(cmdId) {
+            const cmdText = document.getElementById(cmdId).textContent;
+            try {
+                const cmd = JSON.parse(cmdText);
+                await sendCommand(cmd);
+            } catch (e) {
+                showToast('Invalid command', true);
+            }
         }
 
         function showLoading() {
@@ -793,55 +913,112 @@
             if (el) el.remove();
         }
 
-        function formatContent(content) {
-            return content
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/`(.*?)`/g, '<code>$1</code>')
-                .replace(/\n/g, '<br>');
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function copyCode(btn) {
-            const code = btn.closest('.code-block').querySelector('pre').textContent;
-            navigator.clipboard.writeText(code);
-            btn.textContent = '✓ Copied';
-            setTimeout(() => btn.textContent = '📋 Copy', 2000);
-        }
-
-        function executeCode(btn) {
-            const code = btn.closest('.code-block').querySelector('pre').textContent;
-            state.pendingCommands.push({
-                action: 'create_script',
-                name: 'AI_Script_' + Date.now(),
-                code: code,
-                scriptType: 'Script',
-                parent: 'ServerScriptService'
-            });
-            btn.textContent = '✓ Sent';
-            btn.style.background = 'var(--accent)';
-            showToast('Command sent to plugin');
-        }
-
-        function executeCommand(cmd) {
-            state.pendingCommands.push(cmd);
-            showToast('Command sent to plugin');
-        }
-
         function clearChat() {
             document.getElementById('chatContainer').innerHTML = '';
             state.messages = [];
-            addMessage('Chat cleared. How can I help?', false);
+            addMessage('Chat cleared. How can I help?');
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // AI
+        // AI CHAT
         // ═══════════════════════════════════════════════════════════════════
+
+        function buildSystemPrompt() {
+            let prompt = `You are RoadBloxIntel, an AI that can READ, EDIT, CREATE, and DELETE anything in a Roblox game.
+
+CAPABILITIES:
+- Read all scripts in the game
+- Edit existing scripts
+- Create new scripts (Script, LocalScript, ModuleScript)
+- Delete scripts or objects
+- Create parts with effects (particles, lights)
+- Add ParticleEmitters, Beams, Trails
+
+COMMANDS (use JSON in \`\`\`json blocks):
+1. Create script:
+\`\`\`json
+{"action":"create_script","name":"MyScript","scriptType":"Script","parent":"ServerScriptService","code":"print('Hello')"}
+\`\`\`
+
+2. Edit script:
+\`\`\`json
+{"action":"edit_script","path":"ServerScriptService.MyScript","code":"print('Updated')"}
+\`\`\`
+
+3. Delete:
+\`\`\`json
+{"action":"delete","path":"ServerScriptService.MyScript"}
+\`\`\`
+
+4. Create part with effects:
+\`\`\`json
+{"action":"create_part","name":"CoolPart","sizeX":4,"sizeY":4,"sizeZ":4,"posX":0,"posY":10,"posZ":0,"color":{"r":255,"g":0,"b":0},"particles":{"rate":50,"lifetime":2},"light":{"brightness":2,"range":15}}
+\`\`\`
+
+5. Add particle to existing object:
+\`\`\`json
+{"action":"add_particle","path":"Workspace.Part","rate":100,"lifetime":3,"speed":10}
+\`\`\`
+
+RULES:
+- Always explain what you're doing briefly
+- Put Lua code in \`\`\`lua blocks
+- Put commands in \`\`\`json blocks
+- Be concise and helpful
+`;
+
+            if (state.gameData) {
+                prompt += `\n\nCURRENT GAME DATA:\n`;
+                prompt += `Scripts: ${state.gameData.scripts?.length || 0}\n`;
+                prompt += `Parts: ${state.gameData.parts || 0}\n`;
+                prompt += `Models: ${state.gameData.models || 0}\n`;
+                
+                if (state.gameData.scripts && state.gameData.scripts.length > 0) {
+                    prompt += `\nSCRIPTS IN GAME:\n`;
+                    for (const s of state.gameData.scripts.slice(0, 15)) {
+                        prompt += `- ${s.path} (${s.lines} lines)\n`;
+                    }
+                }
+            }
+
+            return prompt;
+        }
+
+        function processAIResponse(content) {
+            // Extract code blocks
+            const luaBlocks = content.match(/```lua\n?([\s\S]*?)```/g) || [];
+            const jsonBlocks = content.match(/```json\n?([\s\S]*?)```/g) || [];
+
+            // Clean text (remove code blocks)
+            let cleanText = content
+                .replace(/```lua\n?[\s\S]*?```/g, '')
+                .replace(/```json\n?[\s\S]*?```/g, '')
+                .trim();
+
+            // Show text response
+            if (cleanText) {
+                addMessage(cleanText);
+            }
+
+            // Show code blocks
+            for (const block of luaBlocks) {
+                const code = block.replace(/```lua\n?/, '').replace(/```$/, '').trim();
+                if (code.length > 5) {
+                    addCodeBlock(code, 'lua');
+                }
+            }
+
+            // Show command blocks
+            for (const block of jsonBlocks) {
+                try {
+                    const json = block.replace(/```json\n?/, '').replace(/```$/, '').trim();
+                    const cmd = JSON.parse(json);
+                    addCommandBlock(cmd);
+                } catch (e) {
+                    // Invalid JSON, ignore
+                }
+            }
+        }
 
         async function sendMessage() {
             const input = document.getElementById('chatInput');
@@ -893,110 +1070,22 @@
                 hideLoading();
 
                 if (data.error) {
-                    addMessage(`❌ Error: ${data.error.message || data.error}`, false);
+                    addMessage(`❌ Error: ${data.error.message || JSON.stringify(data.error)}`);
                     return;
                 }
 
                 const content = data.choices?.[0]?.message?.content || 'No response';
                 
-                // Parse response
                 processAIResponse(content);
                 
                 state.messages.push({ role: 'assistant', content: content });
 
             } catch (error) {
                 hideLoading();
-                addMessage(`❌ Error: ${error.message}`, false);
+                addMessage(`❌ Error: ${error.message}`);
             } finally {
                 state.isGenerating = false;
                 document.getElementById('sendBtn').disabled = false;
-            }
-        }
-
-        function buildSystemPrompt() {
-            let prompt = `You are RoadBloxIntel, an AI that can READ, EDIT, CREATE, and DELETE anything in a Roblox game.
-
-CAPABILITIES:
-- Read all scripts in the game
-- Edit existing scripts
-- Create new scripts (Script, LocalScript, ModuleScript)
-- Delete scripts or objects
-- Create parts with effects (particles, lights)
-- Add ParticleEmitters, Beams, Trails
-
-COMMANDS (use JSON in \`\`\`json blocks):
-1. Create script:
-\`\`\`json
-{"action":"create_script","name":"MyScript","scriptType":"Script","parent":"ServerScriptService","code":"print('Hello')"}
-\`\`\`
-
-2. Edit script:
-\`\`\`json
-{"action":"edit_script","path":"ServerScriptService.MyScript","code":"print('Updated')"}
-\`\`\`
-
-3. Delete:
-\`\`\`json
-{"action":"delete","path":"ServerScriptService.MyScript"}
-\`\`\`
-
-4. Create part:
-\`\`\`json
-{"action":"create_part","name":"CoolPart","sizeX":4,"sizeY":4,"sizeZ":4,"posX":0,"posY":10,"posZ":0,"color":{"r":255,"g":0,"b":0},"particles":{"rate":50,"lifetime":2}}
-\`\`\`
-
-RULES:
-- Always explain what you're doing
-- Put Lua code in \`\`\`lua blocks
-- Put commands in \`\`\`json blocks
-- Be helpful and concise
-`;
-
-            if (state.gameData) {
-                prompt += `\n\nGAME DATA:\n`;
-                prompt += `Scripts: ${state.gameData.scripts?.length || 0}\n`;
-                prompt += `Parts: ${state.gameData.parts || 0}\n`;
-                
-                if (state.gameData.scripts) {
-                    prompt += `\nSCRIPTS:\n`;
-                    for (const s of state.gameData.scripts.slice(0, 20)) {
-                        prompt += `- ${s.path} (${s.lines} lines)\n`;
-                    }
-                }
-            }
-
-            return prompt;
-        }
-
-        function processAIResponse(content) {
-            // Extract code blocks
-            const luaBlocks = content.match(/```lua\n?([\s\S]*?)```/g) || [];
-            const jsonBlocks = content.match(/```json\n?([\s\S]*?)```/g) || [];
-
-            // Clean text
-            let cleanText = content
-                .replace(/```lua\n?[\s\S]*?```/g, '[CODE]')
-                .replace(/```json\n?[\s\S]*?```/g, '[COMMAND]');
-
-            if (cleanText.trim()) {
-                addMessage(cleanText, false);
-            }
-
-            // Show code blocks
-            for (const block of luaBlocks) {
-                const code = block.replace(/```lua\n?/, '').replace(/```$/, '').trim();
-                if (code.length > 10) {
-                    addCodeBlock(code, 'lua');
-                }
-            }
-
-            // Show command blocks
-            for (const block of jsonBlocks) {
-                try {
-                    const json = block.replace(/```json\n?/, '').replace(/```$/, '').trim();
-                    const cmd = JSON.parse(json);
-                    addCommandBlock(cmd);
-                } catch (e) {}
             }
         }
 
@@ -1015,21 +1104,6 @@ RULES:
         document.getElementById('chatInput').addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 150) + 'px';
-        });
-
-        // Load saved settings
-        const savedKey = localStorage.getItem('rbi_apiKey');
-        if (savedKey) document.getElementById('apiKey').value = savedKey;
-
-        document.getElementById('apiKey').addEventListener('change', function() {
-            localStorage.setItem('rbi_apiKey', this.value);
-        });
-
-        const savedModel = localStorage.getItem('rbi_model');
-        if (savedModel) document.getElementById('modelSelect').value = savedModel;
-
-        document.getElementById('modelSelect').addEventListener('change', function() {
-            localStorage.setItem('rbi_model', this.value);
         });
     </script>
 </body>
