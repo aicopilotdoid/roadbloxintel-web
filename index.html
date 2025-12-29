@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoadBloxIntel - AI Roblox Development</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --bg: #0a0a0f;
+            --sidebar: #12121a;
+            --card: #1a1a24;
+            --input: #22222e;
+            --accent: #5865f2;
+            --green: #23b95a;
+            --red: #f04650;
+            --orange: #f5a032;
+            --purple: #9b5af5;
+            --text: #f0f0f5;
+            --dim: #78788c;
+            --user: #4646a0;
+            --ai: #1e1e2a;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Layout */
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #2a2a3a;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        /* Connection Status */
+        .status-card {
+            background: var(--card);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--red);
+        }
+
+        .status-dot.connected {
+            background: var(--green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-size: 13px;
+            color: var(--dim);
+        }
+
+        .connect-code {
+            background: var(--input);
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 3px;
+            color: var(--accent);
+            margin-top: 10px;
+        }
+
+        /* Settings */
+        .settings-section {
+            margin-bottom: 20px;
+        }
+
+        .settings-label {
+            font-size: 11px;
+            color: var(--dim);
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .input-field {
+            width: 100%;
+            background: var(--input);
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .input-field:focus {
+            outline: 2px solid var(--accent);
+        }
+
+        select.input-field {
+            cursor: pointer;
+        }
+
+        /* Game Explorer */
+        .explorer {
+            flex: 1;
+            background: var(--card);
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .explorer-title {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .explorer-item {
+            padding: 6px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 2px;
+        }
+
+        .explorer-item:hover {
+            background: var(--input);
+        }
+
+        .explorer-item.script {
+            color: #7dd3fc;
+        }
+
+        .explorer-item.part {
+            color: #a5b4fc;
+        }
+
+        .explorer-empty {
+            color: var(--dim);
+            font-size: 12px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Main Chat Area */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--card);
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--input);
+            color: var(--text);
+        }
+
+        .btn-success {
+            background: var(--green);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--orange);
+            color: black;
+        }
+
+        /* Chat Area */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-bubble {
+            padding: 15px 18px;
+            border-radius: 12px;
+            max-width: 85%;
+        }
+
+        .message.user .message-bubble {
+            background: var(--user);
+            margin-left: auto;
+        }
+
+        .message.ai .message-bubble {
+            background: var(--ai);
+        }
+
+        .message-header {
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+
+        .message.user .message-header {
+            color: #a5b4fc;
+        }
+
+        .message-content {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .message-content code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: #0d0d12;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+            border: 1px solid #2a2a3a;
+        }
+
+        .code-header {
+            background: var(--card);
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .code-lang {
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .code-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .code-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .code-btn.execute {
+            background: var(--green);
+            color: white;
+        }
+
+        .code-btn.copy {
+            background: var(--input);
+            color: var(--text);
+        }
+
+        .code-content {
+            padding: 15px;
+            overflow-x: auto;
+        }
+
+        .code-content pre {
+            margin: 0;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            color: #98c379;
+        }
+
+        /* Command Block */
+        .command-block {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 1px solid var(--purple);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .command-title {
+            font-size: 12px;
+            color: var(--purple);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .command-action {
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        /* Input Area */
+        .input-area {
+            background: var(--card);
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: var(--input);
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 14px;
+            resize: none;
+            min-height: 50px;
+            max-height: 150px;
+        }
+
+        .chat-input:focus {
+            outline: 2px solid var(--accent);
+        }
+
+        .send-btn {
+            width: 50px;
+            height: 50px;
+            background: var(--accent);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .send-btn:hover {
+            background: #4752c4;
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            background: var(--dim);
+            cursor: not-allowed;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            gap: 5px;
+            padding: 20px;
+        }
+
+        .loading-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite;
+        }
+
+        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--green);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            animation: slideIn 0.3s, fadeOut 0.3s 2.7s;
+            z-index: 1000;
+        }
+
+        .toast.error {
+            background: var(--red);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">🧠 <span>RoadBloxIntel</span></div>
+
+            <!-- Connection Status -->
+            <div class="status-card">
+                <div class="status-row">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span class="status-text" id="statusText">Waiting for plugin...</span>
+                </div>
+                <div class="connect-code" id="connectCode">------</div>
+            </div>
+
+            <!-- API Key -->
+            <div class="settings-section">
+                <div class="settings-label">API Key</div>
+                <input type="password" class="input-field" id="apiKey" placeholder="Enter your API key...">
+            </div>
+
+            <!-- Model -->
+            <div class="settings-section">
+                <div class="settings-label">AI Model</div>
+                <select class="input-field" id="modelSelect">
+                    <option value="gemini-2.0-flash-001">Gemini 2.0 Flash</option>
+                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                    <option value="gpt-4o">GPT-4o</option>
+                    <option value="gpt-4o-mini">GPT-4o Mini</option>
+                    <option value="claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                    <option value="claude-3.5-haiku">Claude 3.5 Haiku</option>
+                    <option value="deepseek-r1">DeepSeek R1</option>
+                    <option value="deepseek-v3">DeepSeek V3</option>
+                </select>
+            </div>
+
+            <!-- Game Explorer -->
+            <div class="explorer" id="explorer">
+                <div class="explorer-title">📁 Game Explorer</div>
+                <div class="explorer-empty">Connect plugin to see game structure</div>
+            </div>
+
+            <!-- Actions -->
+            <button class="btn btn-warning" onclick="clearChat()" style="width: 100%;">🗑️ Clear Chat</button>
+        </div>
+
+        <!-- Main Area -->
+        <div class="main">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-title">💬 Chat with AI</div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="scanGame()">🔍 Scan Game</button>
+                    <button class="btn btn-success" onclick="testConnection()">🔌 Test Connection</button>
+                </div>
+            </div>
+
+            <!-- Chat -->
+            <div class="chat-container" id="chatContainer">
+                <div class="message ai">
+                    <div class="message-bubble">
+                        <div class="message-header">🤖 RoadBloxIntel</div>
+                        <div class="message-content">
+                            <strong>Welcome to RoadBloxIntel!</strong><br><br>
+                            I can <strong>read, edit, create, and delete</strong> anything in your Roblox game.<br><br>
+                            <strong>To get started:</strong><br>
+                            1. Install the plugin in Roblox Studio<br>
+                            2. Enter your API key<br>
+                            3. The plugin will connect automatically<br>
+                            4. Start chatting!<br><br>
+                            <em>Try: "Create a part with fire particles" or "Show me all scripts"</em>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input -->
+            <div class="input-area">
+                <textarea class="chat-input" id="chatInput" placeholder="Ask me to create, edit, or delete anything..." rows="1"></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════════════════════════════════
+        
+        const API_URL = 'https://roadbloxintel-api.adamalexander1230.workers.dev/api/chat';
+        
+        let state = {
+            connected: false,
+            connectionCode: generateCode(),
+            gameData: null,
+            messages: [],
+            pendingCommands: [],
+            isGenerating: false
+        };
+
+        // ═══════════════════════════════════════════════════════════════════
+        // UTILS
+        // ═══════════════════════════════════════════════════════════════════
+
+        function generateCode() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast' + (isError ? ' error' : '');
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('chatContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // CONNECTION (Plugin will poll this)
+        // ═══════════════════════════════════════════════════════════════════
+
+        function updateConnectionStatus(connected) {
+            state.connected = connected;
+            document.getElementById('statusDot').className = 'status-dot' + (connected ? ' connected' : '');
+            document.getElementById('statusText').textContent = connected ? 'Plugin connected!' : 'Waiting for plugin...';
+        }
+
+        document.getElementById('connectCode').textContent = state.connectionCode;
+
+        // Store commands for plugin to fetch
+        window.getCommands = function() {
+            const cmds = [...state.pendingCommands];
+            state.pendingCommands = [];
+            return cmds;
+        };
+
+        // Plugin sends game data here
+        window.receiveGameData = function(data) {
+            state.gameData = data;
+            updateConnectionStatus(true);
+            updateExplorer();
+            showToast('Game data received!');
+        };
+
+        // Plugin confirms command execution
+        window.commandResult = function(result) {
+            addMessage(`✅ ${result.message}`, false, true);
+        };
+
+        // ═══════════════════════════════════════════════════════════════════
+        // EXPLORER
+        // ═══════════════════════════════════════════════════════════════════
+
+        function updateExplorer() {
+            const explorer = document.getElementById('explorer');
+            
+            if (!state.gameData || !state.gameData.scripts) {
+                explorer.innerHTML = `
+                    <div class="explorer-title">📁 Game Explorer</div>
+                    <div class="explorer-empty">Connect plugin to see game structure</div>
+                `;
+                return;
+            }
+
+            let html = `<div class="explorer-title">📁 Game Explorer (${state.gameData.scripts.length} scripts)</div>`;
+            
+            for (const script of state.gameData.scripts.slice(0, 30)) {
+                html += `
+                    <div class="explorer-item script" onclick="selectScript('${script.path}')">
+                        ⚡ ${script.name}
+                    </div>
+                `;
+            }
+
+            if (state.gameData.parts) {
+                html += `<div class="explorer-item part">📦 ${state.gameData.parts} parts</div>`;
+            }
+
+            explorer.innerHTML = html;
+        }
+
+        function selectScript(path) {
+            document.getElementById('chatInput').value = `Show me the code for ${path}`;
+            document.getElementById('chatInput').focus();
+        }
+
+        function scanGame() {
+            state.pendingCommands.push({ action: 'scan_game' });
+            showToast('Scan command sent to plugin');
+        }
+
+        function testConnection() {
+            state.pendingCommands.push({ action: 'ping' });
+            showToast('Testing connection...');
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // CHAT
+        // ═══════════════════════════════════════════════════════════════════
+
+        function addMessage(content, isUser = false, isSystem = false) {
+            const container = document.getElementById('chatContainer');
+            
+            const div = document.createElement('div');
+            div.className = `message ${isUser ? 'user' : 'ai'}`;
+            
+            div.innerHTML = `
+                <div class="message-bubble">
+                    <div class="message-header">${isUser ? '👤 You' : '🤖 RoadBloxIntel'}</div>
+                    <div class="message-content">${formatContent(content)}</div>
+                </div>
+            `;
+            
+            container.appendChild(div);
+            scrollToBottom();
+        }
+
+        function addCodeBlock(code, language = 'lua') {
+            const container = document.getElementById('chatContainer');
+            
+            const div = document.createElement('div');
+            div.className = 'message ai';
+            
+            div.innerHTML = `
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">📜 ${language.toUpperCase()}</span>
+                        <div class="code-actions">
+                            <button class="code-btn copy" onclick="copyCode(this)">📋 Copy</button>
+                            <button class="code-btn execute" onclick="executeCode(this)">▶️ Execute</button>
+                        </div>
+                    </div>
+                    <div class="code-content">
+                        <pre>${escapeHtml(code)}</pre>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(div);
+            scrollToBottom();
+        }
+
+        function addCommandBlock(command) {
+            const container = document.getElementById('chatContainer');
+            
+            const div = document.createElement('div');
+            div.className = 'message ai';
+            
+            div.innerHTML = `
+                <div class="command-block">
+                    <div class="command-title">⚡ Command: ${command.action}</div>
+                    <div class="command-action">${JSON.stringify(command, null, 2)}</div>
+                    <button class="btn btn-success" style="margin-top: 10px;" onclick='executeCommand(${JSON.stringify(command)})'>▶️ Execute</button>
+                </div>
+            `;
+            
+            container.appendChild(div);
+            scrollToBottom();
+        }
+
+        function showLoading() {
+            const container = document.getElementById('chatContainer');
+            const div = document.createElement('div');
+            div.id = 'loadingMessage';
+            div.className = 'message ai';
+            div.innerHTML = `
+                <div class="message-bubble">
+                    <div class="loading">
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+            scrollToBottom();
+        }
+
+        function hideLoading() {
+            const el = document.getElementById('loadingMessage');
+            if (el) el.remove();
+        }
+
+        function formatContent(content) {
+            return content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code>$1</code>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function copyCode(btn) {
+            const code = btn.closest('.code-block').querySelector('pre').textContent;
+            navigator.clipboard.writeText(code);
+            btn.textContent = '✓ Copied';
+            setTimeout(() => btn.textContent = '📋 Copy', 2000);
+        }
+
+        function executeCode(btn) {
+            const code = btn.closest('.code-block').querySelector('pre').textContent;
+            state.pendingCommands.push({
+                action: 'create_script',
+                name: 'AI_Script_' + Date.now(),
+                code: code,
+                scriptType: 'Script',
+                parent: 'ServerScriptService'
+            });
+            btn.textContent = '✓ Sent';
+            btn.style.background = 'var(--accent)';
+            showToast('Command sent to plugin');
+        }
+
+        function executeCommand(cmd) {
+            state.pendingCommands.push(cmd);
+            showToast('Command sent to plugin');
+        }
+
+        function clearChat() {
+            document.getElementById('chatContainer').innerHTML = '';
+            state.messages = [];
+            addMessage('Chat cleared. How can I help?', false);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // AI
+        // ═══════════════════════════════════════════════════════════════════
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            
+            if (!msg || state.isGenerating) return;
+            
+            const apiKey = document.getElementById('apiKey').value;
+            if (!apiKey) {
+                showToast('Please enter your API key!', true);
+                return;
+            }
+
+            input.value = '';
+            state.isGenerating = true;
+            document.getElementById('sendBtn').disabled = true;
+
+            addMessage(msg, true);
+            state.messages.push({ role: 'user', content: msg });
+
+            showLoading();
+
+            try {
+                const systemPrompt = buildSystemPrompt();
+                
+                const messages = [
+                    { role: 'system', content: systemPrompt },
+                    ...state.messages.slice(-20)
+                ];
+
+                const model = document.getElementById('modelSelect').value;
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: messages,
+                        temperature: 0.7,
+                        max_tokens: 8192
+                    })
+                });
+
+                const data = await response.json();
+                
+                hideLoading();
+
+                if (data.error) {
+                    addMessage(`❌ Error: ${data.error.message || data.error}`, false);
+                    return;
+                }
+
+                const content = data.choices?.[0]?.message?.content || 'No response';
+                
+                // Parse response
+                processAIResponse(content);
+                
+                state.messages.push({ role: 'assistant', content: content });
+
+            } catch (error) {
+                hideLoading();
+                addMessage(`❌ Error: ${error.message}`, false);
+            } finally {
+                state.isGenerating = false;
+                document.getElementById('sendBtn').disabled = false;
+            }
+        }
+
+        function buildSystemPrompt() {
+            let prompt = `You are RoadBloxIntel, an AI that can READ, EDIT, CREATE, and DELETE anything in a Roblox game.
+
+CAPABILITIES:
+- Read all scripts in the game
+- Edit existing scripts
+- Create new scripts (Script, LocalScript, ModuleScript)
+- Delete scripts or objects
+- Create parts with effects (particles, lights)
+- Add ParticleEmitters, Beams, Trails
+
+COMMANDS (use JSON in \`\`\`json blocks):
+1. Create script:
+\`\`\`json
+{"action":"create_script","name":"MyScript","scriptType":"Script","parent":"ServerScriptService","code":"print('Hello')"}
+\`\`\`
+
+2. Edit script:
+\`\`\`json
+{"action":"edit_script","path":"ServerScriptService.MyScript","code":"print('Updated')"}
+\`\`\`
+
+3. Delete:
+\`\`\`json
+{"action":"delete","path":"ServerScriptService.MyScript"}
+\`\`\`
+
+4. Create part:
+\`\`\`json
+{"action":"create_part","name":"CoolPart","sizeX":4,"sizeY":4,"sizeZ":4,"posX":0,"posY":10,"posZ":0,"color":{"r":255,"g":0,"b":0},"particles":{"rate":50,"lifetime":2}}
+\`\`\`
+
+RULES:
+- Always explain what you're doing
+- Put Lua code in \`\`\`lua blocks
+- Put commands in \`\`\`json blocks
+- Be helpful and concise
+`;
+
+            if (state.gameData) {
+                prompt += `\n\nGAME DATA:\n`;
+                prompt += `Scripts: ${state.gameData.scripts?.length || 0}\n`;
+                prompt += `Parts: ${state.gameData.parts || 0}\n`;
+                
+                if (state.gameData.scripts) {
+                    prompt += `\nSCRIPTS:\n`;
+                    for (const s of state.gameData.scripts.slice(0, 20)) {
+                        prompt += `- ${s.path} (${s.lines} lines)\n`;
+                    }
+                }
+            }
+
+            return prompt;
+        }
+
+        function processAIResponse(content) {
+            // Extract code blocks
+            const luaBlocks = content.match(/```lua\n?([\s\S]*?)```/g) || [];
+            const jsonBlocks = content.match(/```json\n?([\s\S]*?)```/g) || [];
+
+            // Clean text
+            let cleanText = content
+                .replace(/```lua\n?[\s\S]*?```/g, '[CODE]')
+                .replace(/```json\n?[\s\S]*?```/g, '[COMMAND]');
+
+            if (cleanText.trim()) {
+                addMessage(cleanText, false);
+            }
+
+            // Show code blocks
+            for (const block of luaBlocks) {
+                const code = block.replace(/```lua\n?/, '').replace(/```$/, '').trim();
+                if (code.length > 10) {
+                    addCodeBlock(code, 'lua');
+                }
+            }
+
+            // Show command blocks
+            for (const block of jsonBlocks) {
+                try {
+                    const json = block.replace(/```json\n?/, '').replace(/```$/, '').trim();
+                    const cmd = JSON.parse(json);
+                    addCommandBlock(cmd);
+                } catch (e) {}
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // INPUT HANDLING
+        // ═══════════════════════════════════════════════════════════════════
+
+        document.getElementById('chatInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Auto-resize textarea
+        document.getElementById('chatInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+
+        // Load saved settings
+        const savedKey = localStorage.getItem('rbi_apiKey');
+        if (savedKey) document.getElementById('apiKey').value = savedKey;
+
+        document.getElementById('apiKey').addEventListener('change', function() {
+            localStorage.setItem('rbi_apiKey', this.value);
+        });
+
+        const savedModel = localStorage.getItem('rbi_model');
+        if (savedModel) document.getElementById('modelSelect').value = savedModel;
+
+        document.getElementById('modelSelect').addEventListener('change', function() {
+            localStorage.setItem('rbi_model', this.value);
+        });
+    </script>
+</body>
+</html>
